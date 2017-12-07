@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html >
+<head>
+  <meta charset="UTF-8">
+  <title>Bias-Variance Tradeoff</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/5.0.0/normalize.min.css">
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    tex2jax: {
+      inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+      processEscapes: true
+    }
+  });
+</script>
+
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML" type="text/javascript"></script>
+
+  
+      <style>
+      /* NOTE: The styles were added inline because Prefixfree needs access to your styles and they must be inlined if they are on local disk! */
+      html {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+}
+
+body {
+  color: #333;
+  height: 100%;
+  line-height: 1.5em;
+  margin-bottom: 1.5em;
+}
+
+main {
+  margin: 0 auto;
+  width: 66.66667%;
+}
+
+header {
+  background-color: #333;
+  background-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.25) 100%);
+  box-sizing: border-box;
+  color: #eee;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  padding: 3rem 25%;
+  pointer-events: none;
+  position: relative;
+  left: -25%;
+  width: 150%;
+  transition: all .25s ease-in-out;
+}
+header:before {
+  background-image: linear-gradient(115deg, rgba(255, 255, 255, 0.025) 0%, rgba(255, 255, 255, 0.05) 50%, rgba(255, 255, 255, 0) 50%), linear-gradient(to left, #005952 0%, #005E20 100%);
+  content: "";
+  opacity: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transition: all .25s ease-in-out;
+}
+header:hover:before {
+  opacity: 1;
+}
+header > * {
+  position: relative;
+}
+header h1 {
+  font-weight: bold;
+  font-size: 3em;
+  line-height: 1em;
+  margin: 0 0 .5rem 0;
+  text-align: center;
+}
+header .byline {
+  color: rgba(255, 255, 255, 0.75);
+  display: block;
+  font-size: .8em;
+  letter-spacing: 1px;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+p {
+  margin-bottom: 1.5rem;
+}
+
+.message {
+  background-color: #FDC68A;
+  border-left: .75rem solid #F26C4F;
+  padding: .75rem 1.5rem;
+  font-size: .85rem;
+}
+.message a:hover {
+  border-color: rgba(0, 0, 0, 0.5);
+  color: rgba(0, 0, 0, 0.5);
+}
+.message.note {
+  background-color: #7BCDC8;
+  border-color: #00A99D;
+}
+
+hr {
+  border: none;
+  border-top: .125rem solid #ddd;
+  margin-bottom: 1.375rem;
+}
+
+a {
+  border-bottom: 2px solid #333;
+  color: #333;
+  text-decoration: none;
+  transition: all .125s ease-in-out;
+}
+a:hover {
+  border-bottom-color: #4a7298;
+  color: #4a7298;
+}
+
+ul {
+  margin-top: -.75rem;
+}
+
+code {
+  background-color: rgba(0, 0, 0, 0.125);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 4px;
+  display: inline-block;
+  margin: 0 .125em;
+  padding: 0 .25em;
+}
+
+/* Cards */
+.cards {
+  border-radius: .25rem;
+  display: flex;
+  flex-flow: row nowrap;
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+}
+.cards > a {
+  box-sizing: border-box;
+  border: none;
+  flex: 1 100%;
+  padding: 1.5rem;
+  text-align: center;
+}
+.cards > a svg {
+  display: block;
+  margin: 0 auto .75rem;
+  width: 5.25rem;
+  height: 5.25rem;
+  transition: all .125s ease-in-out;
+}
+.cards > a svg path {
+  transition: fill 0.125s ease-in-out;
+}
+.cards > a {
+  background-color: #333;
+  color: #eee;
+}
+.cards > a svg {
+  background-color: #eee;
+}
+.cards > a svg path {
+  fill: #333;
+}
+.cards > a:hover {
+  background-color: #222;
+  color: #57ad68;
+}
+.cards > a:hover svg {
+  background-color: #57ad68;
+}
+.cards > a:hover svg path {
+  fill: #222;
+}
+
+/* Fluidbox styling starts here */
+a[data-fluidbox] {
+  background-color: #eee;
+  border: none;
+  cursor: -webkit-zoom-in;
+  cursor: -moz-zoom-in;
+  margin-bottom: 1.5rem;
+}
+a[data-fluidbox].fluidbox-opened {
+  cursor: -webkit-zoom-out;
+  cursor: -moz-zoom-out;
+}
+a[data-fluidbox] img {
+  display: block;
+  margin: 0 auto;
+  opacity: 0;
+  max-width: 100%;
+  transition: all .25s ease-in-out;
+}
+
+a[class^='float'] {
+  margin: 1rem;
+  margin-top: 0;
+  width: 33.33333%;
+}
+a[class^='float'].float-left {
+  float: left;
+  margin-left: 0;
+}
+a[class^='float'].float-right {
+  float: right;
+  margin-right: 0;
+}
+
+#fluidbox-overlay {
+  background-color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  cursor: -webkit-zoom-out;
+  cursor: -moz-zoom-out;
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  z-index: 500;
+}
+
+.fluidbox-wrap {
+  background-position: center center;
+  background-size: cover;
+  margin: 0 auto;
+  position: relative;
+  z-index: 400;
+  transition: all .25s ease-in-out;
+}
+.fluidbox-opened .fluidbox-wrap {
+  z-index: 600;
+}
+
+.fluidbox-ghost {
+  background-size: cover;
+  background-position: center center;
+  position: absolute;
+  transition: all .25s ease-in-out;
+}
+
+.gallery {
+  display: flex;
+  -webkit-flex-flow: row wrap;
+  /* Fix for iOS */
+  flex-flow: row wrap;
+  justify-content: space-between;
+}
+.gallery a {
+  margin-bottom: 1rem;
+}
+.gallery a.col-2 {
+  width: 49%;
+}
+.gallery a.col-3 {
+  width: 32%;
+}
+
+/* Media queries, unrelated to functionality of Fluidbox */
+@media only screen and (max-width: 768px) {
+  .cards {
+    flex-flow: row wrap;
+  }
+
+  a[class^='float'] {
+    width: 50%;
+  }
+}
+@media only screen and (max-width: 600px) {
+  .gallery a,
+  .gallery a[class^='col'] {
+    margin-bottom: .5rem;
+    width: 100%;
+  }
+}
+@media only screen and (max-width: 480px) {
+  html {
+    font-size: 12px;
+  }
+
+  .message {
+    border: 0;
+    border-top: .75rem solid #F26C4F;
+  }
+
+  a[class^='float'] {
+    float: none;
+    margin: 0 0 1rem 0;
+    width: 100%;
+  }
+}
+.latexCode {
+  background-color: rgba(0, 0, 0, 0.125);
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  border-radius: 4px;
+  display: inline-block;
+  margin: 0 .125em;
+  padding: 0 .25em;
+}
+
+    </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prefixfree/1.0.7/prefixfree.min.js"></script>
+
+</head>
+
+<body>
+  <main>
+  <header>
+    <h1>Bias-Variance Tradeoff</h1>
+    <span class="byline">Machine Learning Mini Series</span>
+    <span class="byline">By: Adam Lieberman</span>
+  </header>
+  <h1>Generalization</h1>
+  <p>With supervised machine learning we have some set of data points we train our model with (our training set) and some alternate set we test our model with (our testing set). We fit the model to the training data and then query the test data. This allows us to see our model's <b>generalization</b>, its ability to perform well on unobserved inputs. The goal is to get great perfromance on the training set and the testing set. We want to capture all the patterns in the training data so that we can correctly compute the output on our unseen inputs. However, sometimes we have the case of overfitting or underfitting. Bias and variance are two types of error and understanding how to trade-off one error for another can help us improve the data fitting process resulting in more accurate models.</p>
+  <h1>Multiple Models</h1>
+  <p>Before we discuss bias and variance let us assume we have one dataset $X$. Let us create multiple different train/test sets so that we can create multiple models. We will fit each model with its training data and observe the performance with its respective test data.</p>
+  <center><img src="Images/multiple_models.png"/ style="width:50%;height:50%"></center>
+  <p>Above we could take 3 different training sets of $X$ and create three different models from these training sets. We could then take their respective test sets and look at the performance of these models. We might see that if we pass the same inputs into all three models, the outputs might be very similar. The outputs could be very different across all three models. The outputs could be close to being correct. The outputs could be very far off. This all leads to bias and variance.</p>
+  <h1>Bias and Variance</h1>
+  <p>Say we create multiple models from different training sets. We have a standard test set of inputs $X_{\text{test}}$ and its correct output values $Y_{\text{test}}$. We can feed $X_{\text{test}}$ into each of our models to get the predictions for each model. We can then compare these predictions to the actual values of $Y_{\text{test}}$. Error due to bias measures how far off our predictions are from the correct output values. Variance measures how different the predictions are from each other. If all of our predictions across the multiple models are close to the actual output value then we have low bias. If all of our predictions across the multiple models are far from the actual output values then we have high bias. If each model produces very different outputs then we have high variance. If each model produces very similar outputs then we have low variance.</p>
+  <h1>Visualizing Bias and Variance</h1>
+  <p>Let us look at a simple visualization of bias and variance. Assume we have a dartboard and all of the true output values for its inputs are in the red center of dartboard.</p>
+  <center><img src="Images/target.png"/ style="width:50%;height:50%"></center>
+  <p>Each dot represents the predicted output value for a given input across all of our different models. Let us examine each combination of bias and variance that we can have:</p>
+  <ul>
+  	<li><b>Low Bias and Low Variance</b> - We see that each prediction is accurate (low bias) as it is close to the true outputs in the center and that each of the predictions across the models are close together (low variance).</li>
+  	<li><b>Low Bias and High Variance</b> - We see that each prediction is fairly close to the actual target value (low bias) but the predictions are spread out (high variance) from one another when in actuality they should be close to one another.</li>
+  	<li><b>High Bias and Low Variance</b> - We see that the predictions are not close to the actual target values (high bias) but the predictions are farily close to one another (low variance).</li>
+  	<li><b>High Bias and High Variance</b> - We see that the predictions are from from the actual target values (high bias) and are fairly spread out from one another (high variance).</li>
+  </ul>
+
+  <h1>Overfitting and Underfitting</h1>
+  <p>When we overfit we have a highly complex model that too tightly fits our training data. Here we learn the training data too well, we pick up the noise in the training set, and can suffer from poor generalization. We will see that we will have low training error and high testing error. When we have underfitting we have a model that is not complex enough. Here we are unable to learn from the training set. Thus, we will find that we have high training error and high testing error.</p>
+  <center><img src="Images/over_under.png"/ style="width:50%;height:50%"></center>
+  <p>Bias and Variance relates to overfitting and underfitting. When we overfit our model it is highly complex, has low bias, and high variance. When we underfit our model we have low complexity, high bias, and low variance. Ideally, we are looking to find a balance between the two.</p>
+  <center><img src="Images/complexity.png"/ style="width:50%;height:50%"></center>
+  <!--<p>With overfitting we have very complex functions, thus they are sensitive to the data they take in. If we change the data slightly we can have very different functions for our models which can produce variations in the target values for the same inputs but on the training sets . -->
+
+<p>Overfitting and underfitting are common problems in machine learning and trading off bias and variance is a key part in finding the middle ground for a proper model.</p>
+<!--<p>When we underfit we have simple models which produce inaccurate results, but produce consistent results with each model. This gives us the high bias and low variance. When we overfit our model is overly complex and we can get some fairly accurate results depending on the test set, but also some very different results for data that is different from the data that we have seen. This gives us low bias and high variance.</p> -->
+
+<h1>The Trade-Off</h1>
+<p>To combat overfitting and underfitting we need to trade-off our bias and variance. If we underfit we need to increase our variance to reduce the bias. We can do this by increasing the model complexity. If we overfit we need to increase our bias to reduce the variance. We can do this by reducing the model complexity. The goal is to have as low bias and variance as possible. This will ensure that our model produces accurate and consistent results.</p>
+<center><img src="Images/biasvariance.png"/ style="width:50%;height:50%"></center>
+
+
+
+</main>
+  <script src='http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/3.0.4/jquery.imagesloaded.min.js'></script>
+
+    <script  src="js/index.js"></script>
+
+</body>
+</html>
